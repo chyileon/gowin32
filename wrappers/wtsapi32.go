@@ -145,10 +145,10 @@ typedef struct _WTS_PROCESS_INFOA {
 } WTS_PROCESS_INFOA, *PWTS_PROCESS_INFOA;
 */
 type WTS_PROCESS_INFO struct {
-	SessionId    uint32
-	ProcessId    uint32
-	pProcessName *uint16
-	pUserSid     *SID
+	SessionId   uint32
+	ProcessId   uint32
+	ProcessName *uint16
+	UserSid     *SID
 }
 
 var (
