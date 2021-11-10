@@ -143,7 +143,7 @@ typedef struct _WTS_PROCESS_INFOA {
   LPSTR pProcessName;
   PSID  pUserSid;
 } WTS_PROCESS_INFOA, *PWTS_PROCESS_INFOA;
-*//.
+*/
 type WTS_PROCESS_INFO struct {
 	SessionId    uint32
 	ProcessId    uint32
