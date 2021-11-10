@@ -136,6 +136,21 @@ type WTS_CLIENT_DISPLAY struct {
 	ColorDepth           uint32
 }
 
+/*
+typedef struct _WTS_PROCESS_INFOA {
+  DWORD SessionId;
+  DWORD ProcessId;
+  LPSTR pProcessName;
+  PSID  pUserSid;
+} WTS_PROCESS_INFOA, *PWTS_PROCESS_INFOA;
+*//.
+type WTS_PROCESS_INFO struct {
+	SessionId    uint32
+	ProcessId    uint32
+	pProcessName *uint16
+	pUserSid     *SID
+}
+
 var (
 	modwtsapi32 = syscall.NewLazyDLL("wtsapi32.dll")
 
@@ -146,6 +161,7 @@ var (
 	procWTSLogoffSession           = modwtsapi32.NewProc("WTSLogoffSession")
 	procWTSQuerySessionInformation = modwtsapi32.NewProc("WTSQuerySessionInformationW")
 	procWTSQueryUserToken          = modwtsapi32.NewProc("WTSQueryUserToken")
+	procWTSEnumerateProcesses      = modwtsapi32.NewProc("WTSEnumerateProcessesW")
 )
 
 func WTSCloseServer(handle syscall.Handle) {
@@ -235,5 +251,27 @@ func WTSQueryUserToken(sessionId uint32, handle *syscall.Handle) error {
 			return syscall.EINVAL
 		}
 	}
+	return nil
+}
+
+func WTSEnumerateProcesses(server syscall.Handle, reserved uint32, version uint32, pProcessInfo **WTS_PROCESS_INFO, count *uint32) error {
+	r1, _, e1 := syscall.Syscall6(
+		procWTSEnumerateProcesses.Addr(),
+		5,
+		uintptr(server),
+		uintptr(reserved),
+		uintptr(version),
+		uintptr(unsafe.Pointer(pProcessInfo)),
+		uintptr(unsafe.Pointer(count)),
+		0)
+
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+
 	return nil
 }
