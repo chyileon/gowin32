@@ -367,6 +367,10 @@ func (self *Token) GetOwner() (SecurityID, error) {
 	return sid, nil
 }
 
+func (self *Token) GetHandle() syscall.Handle {
+	return self.handle
+}
+
 func IsAdmin() (bool, error) {
 	var sid *wrappers.SID
 	err := wrappers.AllocateAndInitializeSid(
