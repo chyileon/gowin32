@@ -17,7 +17,7 @@
 package gowin32
 
 import (
-	"github.com/winlabs/gowin32/wrappers"
+	"github.com/chyileon/gowin32/wrappers"
 
 	"fmt"
 	"net"
@@ -129,6 +129,13 @@ type WTSServer struct {
 	handle syscall.Handle
 }
 
+type WTSProcessInfo struct {
+	SessionId   uint
+	ProcessId   uint
+	ProcessName string
+	UserSid     *wrappers.SID
+}
+
 func OpenWTSServer(serverName string) *WTSServer {
 	result := WTSServer{}
 	if serverName != "" {
@@ -142,6 +149,29 @@ func (wts *WTSServer) Close() {
 		wrappers.WTSCloseServer(wts.handle)
 		wts.handle = 0
 	}
+}
+
+func (wts *WTSServer) EnumerateProcesses() ([]WTSProcessInfo, error) {
+	var processInfo *wrappers.WTS_PROCESS_INFO
+	var count uint32
+
+	if err := wrappers.WTSEnumerateProcesses(wts.handle, 0, 1, &processInfo, &count); err != nil {
+		return nil, err
+	}
+	defer wrappers.WTSFreeMemory((*byte)(unsafe.Pointer(processInfo)))
+
+	pi := processInfo
+	result := make([]WTSProcessInfo, count)
+	for i := uint32(0); i < count; i++ {
+		result[i] = WTSProcessInfo{
+			SessionId:   uint(pi.SessionId),
+			ProcessId:   uint(pi.ProcessId),
+			ProcessName: LpstrToString(pi.ProcessName),
+			UserSid:     pi.UserSid,
+		}
+		pi = (*wrappers.WTS_PROCESS_INFO)(unsafe.Pointer(uintptr(unsafe.Pointer(pi)) + unsafe.Sizeof(*pi)))
+	}
+	return result, nil
 }
 
 func (wts *WTSServer) EnumerateSessions() ([]WTSSessionInfo, error) {
